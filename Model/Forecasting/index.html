@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Prediksi Cuaca - TFJS</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <h2>Prediksi Cuaca</h2>
+  <div>
+    <label>Suhu (°C): <input type="number" id="suhu" step="0.1"></label><br><br>
+    <label>Kelembapan (%): <input type="number" id="kelembapan" step="0.1"></label><br><br>
+    <label>Curah Hujan (mm): <input type="number" id="curah_hujan" step="0.1"></label><br><br>
+    <label>Kecepatan Angin (m/s): <input type="number" id="kecepatan_angin" step="0.1"></label><br><br>
+    <label>Arah Angin (°): <input type="number" id="arah_angin" step="0.1"></label><br><br>
+    <label>Tutupan Awan (%): <input type="number" id="tutupan_awan" step="0.1"></label><br><br>
+    <label>Jarak Pandang (km): <input type="number" id="jarak_pandang" step="0.1"></label><br><br>
+    <label>Datetime: <input type="datetime-local" id="datetime"></label><br><br>
+    <button type="button" id="predictBtn">Prediksi</button>
+  </div>
+
+  <h3>Hasil Prediksi:</h3>
+  <pre id="output"></pre>
+</body>
+</html>
