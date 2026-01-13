@@ -1,3 +1,4 @@
+// script.js
 let model, scaler, labelMapping;
 
 async function loadArtifacts() {
@@ -9,13 +10,10 @@ async function loadArtifacts() {
   console.log("Scaler & Labels loaded");
 }
 
-
-
 function normalize(val, mean, std) {
   return (val - mean) / std;
 }
 
-// === Fitur waktu ===
 function timeFeatures(dt) {
   const d = new Date(dt);
   const hour = d.getHours();
@@ -32,24 +30,45 @@ function timeFeatures(dt) {
   ];
 }
 
-// === Fitur tambahan (diff) ===
-// di sisi web tidak ada histori → isi 0
-function extraFeatures() {
+function diffFeatures() {
   return [0, 0, 0, 0];
 }
 
-// === Preprocessing time series ===
+function windFeatures(kecepatan) {
+  const wind_deg = 0;
+  const wind_sin = 0;
+  const wind_cos = 1;
+  const wind_x = kecepatan * wind_cos;
+  const wind_y = kecepatan * wind_sin;
+  return [wind_deg, wind_sin, wind_cos, wind_x, wind_y];
+}
+
+function dayMask(dt) {
+  const d = new Date(dt);
+  const hour = d.getHours();
+  const isDay = (hour >= 6 && hour < 18) ? 1.0 : 0.0;
+  return tf.tensor([[isDay]]);
+}
+
 function preprocessTS(values, dt) {
+  const [suhu, kelembapan, curah_hujan, kecepatan_angin, tutupan_awan] = values;
+
   const timeFeats = timeFeatures(dt);
-  const extraFeats = extraFeatures();
-  let feats = [...values, ...timeFeats, ...extraFeats]; // total 18 fitur
+  const diffFeats = diffFeatures();
+  const windFeats = windFeatures(kecepatan_angin);
+
+  let feats = [
+    suhu, kelembapan, curah_hujan, kecepatan_angin, tutupan_awan,
+    ...timeFeats,
+    ...diffFeats,
+    ...windFeats
+  ];
 
   feats = feats.map((v, i) => normalize(v, scaler.mean[i], scaler.std[i]));
   const seq = Array(24).fill(feats);
-  return tf.tensor([seq]); // [1,24,18]
+  return tf.tensor([seq]);
 }
 
-// === Preprocessing gambar ===
 async function preprocessImage(file) {
   const img = new Image();
   return new Promise((resolve) => {
@@ -61,7 +80,7 @@ async function preprocessImage(file) {
           .resizeNearestNeighbor([224,224])
           .toFloat()
           .div(255.0)
-          .expandDims(0); // [1,224,224,3]
+          .expandDims(0);
         resolve(tensor);
       };
     };
@@ -69,7 +88,6 @@ async function preprocessImage(file) {
   });
 }
 
-// === Inference ===
 async function runInference() {
   const values = [
     parseFloat(document.getElementById("suhu").value),
@@ -83,30 +101,29 @@ async function runInference() {
 
   const tsTensor = preprocessTS(values, dt);
   const imgTensor = await preprocessImage(file);
+  const maskTensor = dayMask(dt);
 
   const prediction = await model.executeAsync({
     'img_input': imgTensor,
-    'ts_input1': tsTensor,
-    'ts_input2': tsTensor
+    'ts_input': tsTensor,
+    'mask_day': maskTensor
   });
 
   const probs = await prediction.data();
   const predictedIndex = prediction.argMax(-1).dataSync()[0];
   const predictedLabel = labelMapping[predictedIndex];
 
-  // Tambahkan keterangan waktu prediksi
   const inputTime = new Date(dt);
-  const predictedTime = new Date(inputTime.getTime() + 60*60*1000); // +1 jam
-const predictedTimeStr = predictedTime.toLocaleString("id-ID", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hour12: false
-});
-
+  const predictedTime = new Date(inputTime.getTime() + 60*60*1000)
+  const predictedTimeStr = predictedTime.toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  });
 
   let outputText = `Prediksi cuaca pada ${predictedTimeStr} (1 jam ke depan):\n\n`;
   outputText += "Probabilitas:\n";
