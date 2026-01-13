@@ -34,17 +34,10 @@ Pendekatan ini menghasilkan model yang lebih **robust, adaptif, dan akurat** dib
 ## 📂 Struktur Dataset
 - **Dataset Gambar Awan**
 Dataset
-├── Awan/
-    ├── train/
-    ├── val/
-    ├── test/
+Awan/train/val/test/
   
 - **Dataset Time Series**
-Dataset
-├── Suhu
-      ├── Prakiraan
-              ├── dataset_cuaca_manokwari.csv
-
+Dataset/Suhu/Prakiraan/dataset_cuaca_manokwari.csv
 
 ---
 
